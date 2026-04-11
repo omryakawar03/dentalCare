@@ -1,0 +1,9 @@
+.env
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example
+mongodb-uri.txt
+deploy-values.yaml
+microservice-showcase.tgz

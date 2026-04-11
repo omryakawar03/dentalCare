@@ -1,0 +1,81 @@
+nameOverride: ""
+fullnameOverride: ""
+
+frontend:
+  image:
+    repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/devops-showcase/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  containerPort: 80
+  service:
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+backend:
+  image:
+    repository: 123456789012.dkr.ecr.us-east-1.amazonaws.com/devops-showcase/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  containerPort: 8080
+  service:
+    port: 8080
+  env:
+    nodeEnv: production
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+database:
+  existingSecret: ""
+  secretName: mongodb-atlas
+  connectionStringKey: MONGODB_URI
+  createSecret: false
+  connectionString: ""
+
+externalSecrets:
+  enabled: false
+  refreshInterval: 1h
+  secretStoreName: aws-secrets-manager
+  targetSecretName: mongodb-atlas
+  remoteSecretName: devops-showcase/app/env
+  awsRegion: us-east-1
+  keys:
+    - MONGODB_URI
+
+ingress:
+  enabled: true
+  className: nginx
+  host: app.example.com
+  tls:
+    enabled: false
+    secretName: app-tls
+
+autoscaling:
+  enabled: true
+  backend:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+monitoring:
+  enabled: false
+  interval: 30s
+  path: /metrics
+
+imagePullSecrets: []

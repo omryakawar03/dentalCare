@@ -1,0 +1,102 @@
+name: Deploy Existing Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      frontend_image:
+        description: Full frontend ECR image name and tag
+        required: true
+      backend_image:
+        description: Full backend ECR image name and tag
+        required: true
+      host_name:
+        description: Public host name for ingress
+        required: true
+        default: app.example.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Split image names
+        run: |
+          split_image() {
+            image="$1"
+            tag="${image##*:}"
+            repo="${image%:*}"
+            if [ "$repo" = "$image" ] || echo "$tag" | grep -q "/"; then
+              repo="$image"
+              tag="latest"
+            fi
+            echo "$2_REPOSITORY=$repo" >> "$GITHUB_ENV"
+            echo "$2_TAG=$tag" >> "$GITHUB_ENV"
+          }
+          split_image "${{ inputs.frontend_image }}" FRONTEND
+          split_image "${{ inputs.backend_image }}" BACKEND
+
+      - name: Configure kubeconfig
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || 'devops-showcase' }}
+        run: |
+          aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER_NAME"
+
+      - name: Deploy
+        env:
+          HOST_NAME: ${{ inputs.host_name }}
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          AWS_SECRET_NAME: ${{ vars.AWS_SECRET_NAME || 'devops-showcase/app/env' }}
+          EXTERNAL_SECRETS_ROLE_ARN: ${{ vars.EXTERNAL_SECRETS_ROLE_ARN }}
+        run: |
+          if [ -z "$EXTERNAL_SECRETS_ROLE_ARN" ]; then
+            echo "Missing repository variable EXTERNAL_SECRETS_ROLE_ARN"
+            exit 1
+          fi
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm repo update
+          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+            --namespace ingress-nginx \
+            --create-namespace \
+            --set controller.service.type=LoadBalancer
+          helm upgrade --install external-secrets external-secrets/external-secrets \
+            --namespace external-secrets \
+            --create-namespace \
+            --set installCRDs=true \
+            --set-string "serviceAccount.annotations.eks\.amazonaws\.com/role-arn=$EXTERNAL_SECRETS_ROLE_ARN" \
+            --wait
+          kubectl wait --for=condition=Established \
+            crd/externalsecrets.external-secrets.io \
+            crd/clustersecretstores.external-secrets.io \
+            --timeout=120s
+          kubectl create namespace showcase --dry-run=client -o yaml | kubectl apply -f -
+          helm upgrade --install showcase ./helm/microservice-showcase \
+            --namespace showcase \
+            --set-string frontend.image.repository="$FRONTEND_REPOSITORY" \
+            --set-string frontend.image.tag="$FRONTEND_TAG" \
+            --set-string backend.image.repository="$BACKEND_REPOSITORY" \
+            --set-string backend.image.tag="$BACKEND_TAG" \
+            --set-string database.existingSecret=mongodb-atlas \
+            --set externalSecrets.enabled=true \
+            --set-string externalSecrets.remoteSecretName="$AWS_SECRET_NAME" \
+            --set-string externalSecrets.awsRegion="$AWS_REGION" \
+            --set-string ingress.host="$HOST_NAME"
+          kubectl -n showcase rollout status deployment/showcase-microservice-showcase-backend
+          kubectl -n showcase rollout status deployment/showcase-microservice-showcase-frontend

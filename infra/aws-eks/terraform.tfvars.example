@@ -1,0 +1,14 @@
+aws_region                  = "us-east-1"
+project_name                = "devops-showcase"
+cluster_version             = null
+cluster_public_access_cidrs = ["0.0.0.0/0"]
+node_instance_types         = ["t3.small"]
+node_capacity_type          = "SPOT"
+desired_size                = 1
+min_size                    = 1
+max_size                       = 2
+frontend_ecr_repository_name   = "devops-showcase/frontend"
+backend_ecr_repository_name    = "devops-showcase/backend"
+app_env_secret_name            = "devops-showcase/app/env"
+ecr_force_delete               = true
+secret_recovery_window_in_days = 0

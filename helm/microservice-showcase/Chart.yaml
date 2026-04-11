@@ -1,0 +1,7 @@
+apiVersion: v2
+name: microservice-showcase
+description: Cost-optimized Helm chart for a frontend/backend app with MongoDB Atlas.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
