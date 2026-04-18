@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region for the EKS showcase."
   type        = string
-  default     = "us-east-1"
+  default     = "ap-south-1"
 }
 
 variable "project_name" {
@@ -25,13 +25,13 @@ variable "cluster_public_access_cidrs" {
 variable "node_instance_types" {
   description = "Instance types for the managed node group."
   type        = list(string)
-  default     = ["t3.small"]
+  default     = ["c7i.large"]
 }
 
 variable "node_capacity_type" {
   description = "Use SPOT for low-cost demos or ON_DEMAND for production reliability."
   type        = string
-  default     = "SPOT"
+  default     = "ON_DEMAND"
 
   validation {
     condition     = contains(["ON_DEMAND", "SPOT"], var.node_capacity_type)
@@ -60,13 +60,13 @@ variable "max_size" {
 variable "frontend_ecr_repository_name" {
   description = "ECR repository name for the frontend image. Leave empty to use project_name/frontend."
   type        = string
-  default     = ""
+  default     = "frontend_repo"
 }
 
 variable "backend_ecr_repository_name" {
   description = "ECR repository name for the backend image. Leave empty to use project_name/backend."
   type        = string
-  default     = ""
+  default     = "backend_repo"
 }
 
 variable "app_env_secret_name" {

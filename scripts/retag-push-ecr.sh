@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-aws_region="us-east-1"
+aws_region="ap-south-1"
 frontend_local_image=""
 backend_local_image=""
 frontend_ecr_url=""
