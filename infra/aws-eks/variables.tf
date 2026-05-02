@@ -25,7 +25,7 @@ variable "cluster_public_access_cidrs" {
 variable "node_instance_types" {
   description = "Instance types for the managed node group."
   type        = list(string)
-  default     = ["c7i.large"]
+  default     = ["c7i-flex.large"]
 }
 
 variable "node_capacity_type" {
