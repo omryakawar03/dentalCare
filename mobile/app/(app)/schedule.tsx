@@ -1,0 +1,3 @@
+import { Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+export default function ScheduleScreen() { return <SafeAreaView className="flex-1 bg-clinic-canvas px-5"><Text className="mb-2 mt-6 text-2xl font-bold text-clinic-ink">Schedule</Text><Text className="text-sm text-slate-500">Your authorized appointments will appear here.</Text><View className="mt-5 rounded-xl border border-slate-100 bg-white p-5"><Text className="text-sm font-semibold text-clinic-ink">No schedule data yet</Text><Text className="mt-2 text-xs text-slate-500">Sign in to a configured clinic account to load the schedule.</Text></View></SafeAreaView>; }

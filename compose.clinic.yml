@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: clinic
+      POSTGRES_USER: clinic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only-change-me}
+    volumes:
+      - clinic-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinic -d clinic"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - clinic-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-DentalCare}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+asyncpg://clinic:${POSTGRES_PASSWORD:-local-only-change-me}@postgres:5432/clinic
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-local-only-replace-this-with-a-random-secret}
+      ALLOWED_ORIGINS: '${ALLOWED_ORIGINS:-["http://localhost:3000"]}'
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build: ./backend
+    restart: unless-stopped
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "worker", "--loglevel=INFO"]
+    environment:
+      APP_NAME: ${APP_NAME:-DentalCare}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+asyncpg://clinic:${POSTGRES_PASSWORD:-local-only-change-me}@postgres:5432/clinic
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-local-only-replace-this-with-a-random-secret}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  clinic-postgres:
+  clinic-redis:
