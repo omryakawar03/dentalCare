@@ -1,0 +1,5 @@
+# Backup and disaster recovery
+
+Municipality leadership and hosting provider must set RPO/RTO from impact analysis; values are intentionally not invented here. Enable encrypted PostgreSQL automated backups plus point-in-time recovery, encrypted object versioning/replication, and configuration/IaC backups. Keep keys and backup administration separated from routine application operators. Redis is treated as rebuildable unless an approved workflow depends on durable queue state; durable work must be persisted independently.
+
+Daily verify backup job status and integrity. On the approved cadence, restore into an isolated environment, validate schema, tenant separation, attachments, audit continuity and application startup, then record actual recovery time. Maintain a runbook with incident lead, authority to fail over, DNS/credential actions, data integrity checks, citizen communication owner, rollback, and post-incident review. Never test recovery against production data in an uncontrolled environment.

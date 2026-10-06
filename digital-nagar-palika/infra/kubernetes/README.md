@@ -1,0 +1,3 @@
+# Kubernetes deployment profile
+
+Use a supported managed Kubernetes service with private control plane where available. The production chart must set non-root UID, read-only root filesystem, dropped Linux capabilities, seccomp RuntimeDefault, CPU/memory requests and limits, startup/readiness/liveness probes, rolling updates, PodDisruptionBudget, HPA, network policies, service account workload identity, external secret references, TLS ingress, and restricted egress. Store images in a private registry and deploy immutable digests. Keep manifests environment-specific, signed and reviewed. Do not expose PostgreSQL, Redis, dashboards or admin APIs to the public internet. Configure backups separately from cluster lifecycle.

@@ -1,0 +1,3 @@
+# Infrastructure starter
+
+Provision cloud resources only in a municipality-approved account and region. Select the Indian hosting/data residency arrangement after legal and procurement review. Terraform state must use an encrypted, access-controlled remote backend with locking; never commit state or credentials. Define managed PostgreSQL with PITR, private networking, KMS-backed encryption, object storage with versioning and malware quarantine, workload identity, managed secrets, ingress/WAF, Redis, and monitoring before deployment. This directory intentionally contains no account-specific infrastructure, public endpoints, or invented production defaults. Keep plan review and human approval between staging and production.
