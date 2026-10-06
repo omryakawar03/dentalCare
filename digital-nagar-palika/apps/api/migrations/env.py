@@ -1,11 +1,13 @@
-from logging.config import fileConfig
+from app.core.config import settings
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 config = context.config
-if config.config_file_name:
-    fileConfig(config.config_file_name)
+# This project's alembic.ini intentionally has no logging sections, so do not
+# pass it to logging.config.fileConfig (which requires [loggers]/[formatters]).
+database_url = settings.database_url.replace("%", "%%")
+config.set_main_option("sqlalchemy.url", database_url)
 
 def run_migrations_offline():
     context.configure(url=config.get_main_option("sqlalchemy.url"), literal_binds=True,

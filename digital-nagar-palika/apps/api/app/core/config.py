@@ -1,9 +1,14 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import model_validator
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parents[4] / ".env",
+        extra="ignore",
+    )
     app_env: str = "development"
     database_url: str = "postgresql+asyncpg://municipal:local_only_change_me@localhost:5432/nagar_palika"
     redis_url: str = "redis://localhost:6379/0"
